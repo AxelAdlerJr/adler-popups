@@ -1,0 +1,297 @@
+(() => {
+  const INTRO_ID = "intro-popup";
+  const INTRO_KEY_HIDE_UNTIL = "intro_hide_until_ts";
+  const INTRO_KEY_SUBSCRIBED = "intro_subscribed";
+  const HIDE_DAYS = 7;
+
+  // Must match the release tag you load from jsDelivr
+  const VERSION = "v1.0.1";
+  const ASSETS_BASE = "https://cdn.jsdelivr.net/gh/AxelAdlerJr/adler-popups@" + VERSION + "/assets/";
+
+  // Filenames must match the repo exactly
+  const ASSET = {
+    logo: ASSETS_BASE + "logo_popup.webp",
+    members: ASSETS_BASE + "member-faces.webp",
+    message: ASSETS_BASE + "messagepop-up.webp",
+    arrow: ASSETS_BASE + "arrow-line.svg",
+    arrowMobile: ASSETS_BASE + "arrow-line-mobile.svg",
+    phone: ASSETS_BASE + "phone.webp",
+    avatar: ASSETS_BASE + "avatar.webp",
+    star: ASSETS_BASE + "star.svg",
+    bitcoin: ASSETS_BASE + "bitcoin.webp",
+  };
+
+  // Prevent double injection
+  if (document.getElementById(INTRO_ID)) return;
+
+  // Basic bot detection
+  const ua = navigator.userAgent || "";
+  const isBotLike =
+    /bot|crawl|spider|slurp|facebookexternalhit|preview|monitoring/i.test(ua) ||
+    navigator.webdriver === true;
+
+  if (isBotLike) {
+    document.documentElement.dataset.intro = "hidden";
+    return;
+  }
+
+  const getNum = (k) => {
+    const v = localStorage.getItem(k);
+    const n = v ? Number(v) : 0;
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  // Ghost members endpoint: 200 = member, 204/401 = non-member (varies by config)
+  const isMember = async () => {
+    try {
+      const res = await fetch("/members/api/member/", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      return res.status === 200;
+    } catch {
+      return false;
+    }
+  };
+
+  const escapeHtml = (s) =>
+    String(s).replace(/[&<>"']/g, (c) => {
+      switch (c) {
+        case "&": return "&amp;";
+        case "<": return "&lt;";
+        case ">": return "&gt;";
+        case '"': return "&quot;";
+        case "'": return "&#39;";
+        default: return c;
+      }
+    });
+
+  const STAR_IMG =
+    '<img loading="lazy" decoding="async" class="w-[15px] h-[15px]" ' +
+    'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.star + '" alt="star">';
+
+  const STAR_5 = STAR_IMG + STAR_IMG + STAR_IMG + STAR_IMG + STAR_IMG;
+
+  const TESTIMONIALS = [
+    "The only Bitcoin brief I actually read daily. No fluff, just data.",
+    "Axel's on-chain analysis helped me understand market structure better than years of trading.",
+    "I was drowning in crypto Twitter noise. Adler AM cuts through all of it with clear, actionable insights.",
+    "As someone from TradFi, I appreciate the professional approach. No moon predictions - just rigorous analysis.",
+    "Started reading for the on-chain metrics, stayed for the derivatives analysis. Best 3 minutes of my morning.",
+  ];
+
+  const TESTIMONIALS_HTML = TESTIMONIALS.map((t) => {
+    return (
+      '<li class="flex flex-wrap items-center gap-y-2" style="row-gap:5px;">' +
+        '<div class="flex items-start">' +
+          '<img loading="lazy" decoding="async" class="w-[16px] h-[16px] mr-[11px]" style="margin-top:4px;" ' +
+               'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.avatar + '" alt="Avatar">' +
+          "<p>" + escapeHtml('"' + t + '"') + "</p>" +
+        "</div>" +
+        '<div class="flex ml-5 flex-nowrap">' + STAR_5 + "</div>" +
+      "</li>"
+    );
+  }).join("");
+
+  const INTRO_HTML =
+    '<div class="text-white js-intro" aria-hidden="true" id="' + INTRO_ID + '">' +
+      '<div class="max-w-[1618px] mx-auto relative">' +
+        '<div class="relative intro-content">' +
+          '<div class="flex items-center justify-between">' +
+            '<div class="intro-logo">' +
+              '<img class="w-[140px] h-auto md:w-[227px] md:h-[55px]" ' +
+                   'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.logo + '" alt="Adler AM Logo">' +
+            "</div>" +
+            '<button class="js-intro-close" type="button">' +
+              '<span class="md:inline hidden">Take me to the site</span> <span class="md:ml-2 hidden md:inline">X</span>' +
+            "</button>" +
+          "</div>" +
+
+          '<div class="flex-col intro-grid xl:flex-row">' +
+            '<div class="intro-left xl:max-w-[881px]">' +
+              '<h2 class="intro-title font-inter">Tired of crypto noise? Get institutional-grade Bitcoin analysis in 3 minutes.</h2>' +
+
+              '<p class="intro-text">' +
+                "The crypto market is full of hype and speculation. We're different. Adler AM is a daily Bitcoin " +
+                "brief that gives you only what matters: on-chain data, derivatives signals, ETF flows, " +
+                "and macro context - no shilling, no hopium, no clickbait. Data-driven insights " +
+                "from a CryptoQuant Verified Author so you can make informed decisions. Join over 3,000+ " +
+                "analysts, traders, and investors who start their day with Adler AM." +
+              "</p>" +
+
+              '<div class="flex flex-col items-start justify-between xl:items-center xl:flex-row gap-y-6">' +
+                '<img loading="lazy" decoding="async" class="max-w-[348px] w-full image-member" ' +
+                     'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.members + '" alt="Subscribers">' +
+                '<p class="text-[30px] text-white text-form">' +
+                  '<b class="bg-white text-[#FF5900] px-[8px] py-[5px]">3,000+</b> subscribers reading today' +
+                "</p>" +
+              "</div>" +
+
+              '<form class="subscribe-form" data-members-form="subscribe">' +
+                '<input data-members-email required type="email" placeholder="Your email address" required>' +
+                '<button type="submit">SUBSCRIBE</button>' +
+              "</form>" +
+
+              '<div class="flex items-start mt-[40px] md:mt-[50px] xl:flex-row flex-col gap-y-10">' +
+                '<div class="flex flex-col w-full text-white border-white xl:pr-12 xl:border-r gap-7 xl:w-auto">' +
+                  "<div><p class=\"text-xl font-bold\">3,000+ subscribers and growing daily</p><p class=\"mt-3\">Traders, analysts, and investors who want signal, not noise.</p></div>" +
+                  "<div><p class=\"text-xl font-bold\">CryptoQuant Verified Author</p><p class=\"mt-3\">Trusted by one of the leading on-chain platforms.</p></div>" +
+                  "<div><p class=\"text-xl font-bold\">Institutional-grade methodology</p><p class=\"mt-3\">On-chain + derivatives + macro in one brief.</p></div>" +
+                  "<div><p class=\"text-xl font-bold\">Free daily brief</p><p class=\"mt-3\">3-minute read every morning before markets move.</p></div>" +
+                "</div>" +
+
+                '<div class="xl:pl-[48px] text-white relative xl:pt-0 pt-7 border-t xl:border-none border-white w-full xl:w-auto">' +
+                  '<p class="text-[35px] lh-1">You will always get:</p>' +
+                  '<ul class="list-disc pl-[30px] mt-5">' +
+                    "<li><p>What on-chain data is showing</p></li>" +
+                    "<li><p>What derivatives markets signal</p></li>" +
+                    "<li><p>What ETF flows tell us</p></li>" +
+                    "<li><p>Axel's take on the setup</p></li>" +
+                  "</ul>" +
+
+                  '<div class="relative flex justify-center gap-3 overflow-hidden xl:overflow-visible md:block">' +
+                    '<img loading="lazy" decoding="async" class="relative z-10 block mt-[40px] w-[148px] h-[148px]" ' +
+                         'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.message + '" alt="Message">' +
+
+                    '<img loading="lazy" decoding="async" ' +
+                         'class="absolute z-0 rotate-x-180 xl:rotate-x-0 xl:-rotate-[6deg] bottom-[30px] xl:bottom-[60px] right-1/2 xl:-right-[85%] md:block hidden" ' +
+                         'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.arrow + '" alt="" aria-hidden="true">' +
+
+                    '<img loading="lazy" decoding="async" class="w-[101px] md:hidden mt-auto" ' +
+                         'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.arrowMobile + '" alt="" aria-hidden="true">' +
+                  "</div>" +
+                "</div>" +
+              "</div>" +
+            "</div>" +
+
+            '<div class="w-full intro-right">' +
+              '<div class="intro-phone xl:ml-[55px]">' +
+                '<img loading="lazy" decoding="async" fetchpriority="low" ' +
+                     'class="w-full max-w-[377px] h-auto mt-[50px] xl:mx-0 mx-auto" ' +
+                     'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.phone + '" alt="Phone mockup">' +
+              "</div>" +
+            "</div>" +
+          "</div>" +
+        "</div>" +
+      "</div>" +
+
+      '<div class="bg-[#e9e9e9]">' +
+        '<div class="max-w-[1618px] mx-auto relative pt-[55px] pb-[71px] flex">' +
+          '<div class="px-[50px] w-full flex items-center flex-wrap gap-y-[48px]">' +
+            "<div>" +
+              '<h5 class="text-[35px] text-[#21262C] lh-1">What subscribers are saying:</h5>' +
+              '<ul class="flex flex-col text-black gap-[38px] mt-[50px]">' + TESTIMONIALS_HTML + "</ul>" +
+            "</div>" +
+
+            '<div class="flex flex-col items-center justify-center mx-auto">' +
+              '<img loading="lazy" decoding="async" class="w-[100px] h-[100px]" ' +
+                   'src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-src="' + ASSET.bitcoin + '" alt="bitcoin">' +
+              '<p class="md:mt-0 mt-2 text-[32px] md:text-[50px] font-bold text-[#21262C] text-center">SUBSCRIBE <br>IT\'S FREE</p>' +
+            "</div>" +
+          "</div>" +
+        "</div>" +
+      "</div>" +
+
+      '<div class="max-w-[1618px] mx-auto relative">' +
+        '<div class="px-[50px] py-[15px]">' +
+          "<p>©2026 Adler AM. Adler AM is owned and operated by Axel Adler Jr.</p>" +
+        "</div>" +
+      "</div>" +
+    "</div>";
+
+  const loadIntroImages = (intro) => {
+    intro.querySelectorAll("img[data-src]").forEach((img) => {
+      const src = img.getAttribute("data-src");
+      if (!src) return;
+      img.setAttribute("src", src);
+      img.removeAttribute("data-src");
+    });
+  };
+
+  const setVisible = (intro) => {
+    document.documentElement.dataset.intro = "visible";
+    document.body.classList.add("intro-lock");
+    intro.setAttribute("aria-hidden", "false");
+    loadIntroImages(intro);
+  };
+
+  const setHidden = (intro) => {
+    document.documentElement.dataset.intro = "hidden";
+    document.body.classList.remove("intro-lock");
+    intro.setAttribute("aria-hidden", "true");
+  };
+
+  const mountIntro = () => {
+    const existing = document.getElementById(INTRO_ID);
+    if (existing) return existing;
+    document.body.insertAdjacentHTML("beforeend", INTRO_HTML);
+    return document.getElementById(INTRO_ID);
+  };
+
+  const attachLogic = (intro) => {
+    const closeBtn = intro.querySelector(".js-intro-close");
+    const onClose = () => {
+      const until = Date.now() + HIDE_DAYS * 24 * 60 * 60 * 1000;
+      localStorage.setItem(INTRO_KEY_HIDE_UNTIL, String(until));
+      setHidden(intro);
+    };
+    if (closeBtn) closeBtn.addEventListener("click", onClose);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && document.documentElement.dataset.intro === "visible") {
+        onClose();
+      }
+    });
+
+    const form = intro.querySelector('form[data-members-form="subscribe"]');
+    if (!form) return;
+
+    form.addEventListener("submit", () => form.classList.add("loading"));
+
+    const targets = [form, form.closest(".subscribe-form")].filter(Boolean);
+
+    const markSubscribedAttempt = () => {
+      localStorage.setItem(INTRO_KEY_SUBSCRIBED, "1");
+      setHidden(intro);
+    };
+
+    const obs = new MutationObserver(() => {
+      for (const t of targets) {
+        const cls = t.className || "";
+        if (/\bsuccess\b/.test(cls)) {
+          markSubscribedAttempt();
+          return;
+        }
+        if (/\berror\b/.test(cls)) {
+          form.classList.remove("loading");
+        }
+      }
+    });
+
+    targets.forEach((t) => obs.observe(t, { attributes: true, attributeFilter: ["class"] }));
+  };
+
+  (async () => {
+    if (localStorage.getItem(INTRO_KEY_SUBSCRIBED) === "1") {
+      document.documentElement.dataset.intro = "hidden";
+      return;
+    }
+
+    const hideUntil = getNum(INTRO_KEY_HIDE_UNTIL);
+    if (hideUntil && Date.now() < hideUntil) {
+      document.documentElement.dataset.intro = "hidden";
+      return;
+    }
+
+    const member = await isMember();
+    if (member) {
+      document.documentElement.dataset.intro = "hidden";
+      return;
+    }
+
+    const intro = mountIntro();
+    attachLogic(intro);
+    setVisible(intro);
+  })();
+})();
