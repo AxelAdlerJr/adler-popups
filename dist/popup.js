@@ -5,7 +5,7 @@
   const HIDE_DAYS = 7;
 
   // Must match the release tag you load from jsDelivr
-  const VERSION = "v1.0.1";
+  const VERSION = "v1.0.3";
   const ASSETS_BASE = "https://cdn.jsdelivr.net/gh/AxelAdlerJr/adler-popups@" + VERSION + "/assets/";
 
   // Filenames must match the repo exactly
