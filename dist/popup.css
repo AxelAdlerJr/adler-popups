@@ -1,0 +1,150 @@
+/* Intro popup */
+.js-intro { display: none; }
+
+html[data-intro="hidden"] .js-intro { display: none; }
+html[data-intro="visible"] .js-intro { display: block; }
+
+body.intro-lock { overflow: hidden; }
+
+/* Overlay */
+.js-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow-y: auto;
+  background: #FF5900;
+  font-family: "Inter", sans-serif !important;
+}
+.js-intro .lh-1{
+  line-height: 1;
+}
+
+/* Close button */
+.js-intro-close {
+  position: sticky;
+  top: 0;
+  margin-left: auto;
+  display: block;
+  border: 0;
+  background: rgba(255, 255, 255);
+  color: #FF5900;
+  padding: 8px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  height: auto;
+}
+
+/* Layout */
+.intro-content {
+  width: min(1618px, 100%);
+  margin: 0 auto;
+  padding: 38px 50px 34px 50px;
+  font-family: "Inter", sans-serif !important;
+}
+
+.intro-grid { display: flex; align-items: start; }
+
+.intro-title {
+  font-size: 40px;
+  margin: 51px 0 59px;
+  color: #fff;
+  font-family: "Inter", sans-serif;
+}
+
+.intro-text {
+  color: rgba(255, 255, 255);
+  font-size: 20px;
+  margin-bottom: 78px;
+}
+
+.subscribe-form {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  background: rgba(255, 255, 255);
+  padding: 8px;
+  height: 96px;
+}
+
+.subscribe-form input {
+  width: 100%;
+  border: none;
+  padding: 4px;
+  font-size: 20px;
+  outline: none;
+  color: black;
+}
+
+.subscribe-form input:focus {
+  outline: none;
+  border: none;
+  --tw-ring-color: none;
+}
+
+.subscribe-form button {
+  border: 0;
+  padding: 28px 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 20px;
+  background-color: #21262C;
+  color: #fff;
+  width: 236px;
+  height: 79px;
+}
+
+/* Form states */
+.subscribe-form.loading button { opacity: 0.5; pointer-events: none; }
+
+.subscribe-form.success input,
+.subscribe-form.success button { display: none; }
+
+.subscribe-form.success::after {
+  content: "Check your inbox!";
+  color: #fff;
+  font-weight: 700;
+}
+
+/* phone */
+.intro-right { width: 100%; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .intro-grid { grid-template-columns: 1fr; }
+
+  .js-intro-close{
+    width:32px;height:32px;padding:0;
+    position:sticky;top:0;margin-left:auto;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .js-intro-close::before,
+  .js-intro-close::after{
+    content:"";
+    position:absolute;
+    left:50%;top:50%;
+    width:18px;height:2px;
+    background:#FF5900;border-radius:2px;
+    transform-origin:center;
+  }
+  .js-intro-close::before{transform:translate(-50%,-50%) rotate(45deg)}
+  .js-intro-close::after{transform:translate(-50%,-50%) rotate(-45deg)}
+  .intro-title { margin: 42px 0 22px; line-height: 1.2; font-weight: 400; font-size: 24px;}
+  .intro-text { line-height: 1.2; font-size: 16px; margin-bottom: 38px;}
+  .intro-content { padding-inline: 20px; padding-top: 20px}
+  .text-form{font-size:18px !important;}
+  .subscribe-form{
+    display: flex;
+    flex-direction: column;
+    background-color: transparent;
+    height: auto;
+    gap: 20px;
+    padding: 0px;
+  }
+  .subscribe-form input{ padding: 16px 8px; font-size: 20px; }
+  .subscribe-form button{ width: 100%; height: 56px; padding: 0px;}
+  .image-member{
+    max-width: 65% !important;
+  }
+}
